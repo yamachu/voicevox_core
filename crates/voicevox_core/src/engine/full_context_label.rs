@@ -16,7 +16,7 @@ pub enum FullContextLabelError {
     InvalidMora { mora: Box<Mora> },
 
     #[error(transparent)]
-    OpenJtalk(#[from] open_jtalk::OpenJtalkError),
+    OpenJtalk(#[from] text_to_label::OpenJtalkError),
 }
 
 type Result<T> = std::result::Result<T, FullContextLabelError>;
@@ -306,7 +306,7 @@ impl Utterance {
     }
 
     pub fn extract_full_context_label(
-        open_jtalk: &mut open_jtalk::OpenJtalk,
+        open_jtalk: &mut impl text_to_label::TextToLabel,
         text: impl AsRef<str>,
     ) -> Result<Self> {
         let labels = open_jtalk.extract_fullcontext(text)?;
