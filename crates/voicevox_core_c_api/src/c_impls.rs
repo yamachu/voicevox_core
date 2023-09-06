@@ -2,9 +2,11 @@ use std::{ffi::CString, path::Path, sync::Arc};
 
 use voicevox_core::{InitializeOptions, OpenJtalk, Result, Synthesizer, VoiceModel, VoiceModelId};
 
-use crate::{CApiResult, OpenJtalkRc, VoicevoxSynthesizer, VoicevoxVoiceModel};
+use crate::{
+    CApiResult, OpenJtalkRcInternal, VoicevoxSynthesizerInternal, VoicevoxVoiceModelInternal,
+};
 
-impl OpenJtalkRc {
+impl OpenJtalkRcInternal {
     pub(crate) fn new_with_initialize(open_jtalk_dic_dir: impl AsRef<Path>) -> Result<Self> {
         Ok(Self {
             open_jtalk: Arc::new(OpenJtalk::new_with_initialize(open_jtalk_dic_dir)?),
@@ -12,9 +14,9 @@ impl OpenJtalkRc {
     }
 }
 
-impl VoicevoxSynthesizer {
+impl VoicevoxSynthesizerInternal {
     pub(crate) async fn new_with_initialize(
-        open_jtalk: &OpenJtalkRc,
+        open_jtalk: &OpenJtalkRcInternal,
         options: &InitializeOptions,
     ) -> Result<Self> {
         let synthesizer =
@@ -38,7 +40,7 @@ impl VoicevoxSynthesizer {
     }
 }
 
-impl VoicevoxVoiceModel {
+impl VoicevoxVoiceModelInternal {
     pub(crate) async fn from_path(path: impl AsRef<Path>) -> Result<Self> {
         let model = VoiceModel::from_path(path).await?;
         let id = CString::new(model.id().raw_voice_model_id().as_str()).unwrap();

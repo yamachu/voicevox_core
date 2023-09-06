@@ -94,7 +94,10 @@ static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
 /// voicevox_open_jtalk_rc_delete(open_jtalk);
 /// ```
 /// }
-pub struct OpenJtalkRc {
+#[repr(C)]
+pub struct OpenJtalkRc;
+
+pub(crate) struct OpenJtalkRcInternal {
     open_jtalk: Arc<OpenJtalk>,
 }
 
@@ -125,8 +128,10 @@ pub unsafe extern "C" fn voicevox_open_jtalk_rc_new(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let open_jtalk_dic_dir = ensure_utf8(CStr::from_ptr(open_jtalk_dic_dir))?;
-        let open_jtalk = OpenJtalkRc::new_with_initialize(open_jtalk_dic_dir)?.into();
-        out_open_jtalk.as_ptr().write_unaligned(open_jtalk);
+        let open_jtalk = OpenJtalkRcInternal::new_with_initialize(open_jtalk_dic_dir)?;
+        out_open_jtalk.as_ptr().write_unaligned(Box::from_raw(
+            Box::into_raw(Box::from(open_jtalk)).cast::<OpenJtalkRc>(),
+        ));
         Ok(())
     })())
 }
@@ -143,15 +148,21 @@ pub unsafe extern "C" fn voicevox_open_jtalk_rc_new(
 /// - `user_dict`は ::voicevox_user_dict_new で得たものでなければならず、また ::voicevox_user_dict_delete で解放されていてはいけない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_open_jtalk_rc_use_user_dict(
+pub unsafe extern "C" fn voicevox_open_jtalk_rc_use_user_dict(
     open_jtalk: &OpenJtalkRc,
     user_dict: &VoicevoxUserDict,
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let user_dict = user_dict.to_owned();
         {
-            let dict = user_dict.dict.as_ref().lock().expect("lock failed");
-            open_jtalk.open_jtalk.use_user_dict(&dict)?;
+            let dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+                .dict
+                .as_ref()
+                .lock()
+                .expect("lock failed");
+            (&*(open_jtalk as *const OpenJtalkRc as *mut OpenJtalkRcInternal))
+                .open_jtalk
+                .use_user_dict(&dict)?;
         }
         Ok(())
     })())
@@ -224,8 +235,11 @@ pub extern "C" fn voicevox_get_version() -> *const c_char {
 ///
 /// VVMファイルと対応する。
 /// <b>構築</b>(_construction_)は ::voicevox_voice_model_new_from_path で行い、<b>破棄</b>(_destruction_)は ::voicevox_voice_model_delete で行う。
+#[repr(C)]
+pub struct VoicevoxVoiceModel;
+
 #[derive(Getters)]
-pub struct VoicevoxVoiceModel {
+pub(crate) struct VoicevoxVoiceModelInternal {
     model: VoiceModel,
     id: CString,
     metas: CString,
@@ -257,10 +271,10 @@ pub unsafe extern "C" fn voicevox_voice_model_new_from_path(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let path = ensure_utf8(CStr::from_ptr(path))?;
-        let model = RUNTIME
-            .block_on(VoicevoxVoiceModel::from_path(path))?
-            .into();
-        out_model.as_ptr().write_unaligned(model);
+        let model = RUNTIME.block_on(VoicevoxVoiceModelInternal::from_path(path))?;
+        out_model.as_ptr().write_unaligned(Box::from_raw(
+            Box::into_raw(Box::from(model)).cast::<VoicevoxVoiceModel>(),
+        ));
         Ok(())
     })())
 }
@@ -275,8 +289,12 @@ pub unsafe extern "C" fn voicevox_voice_model_new_from_path(
 /// - `model`は ::voicevox_voice_model_new_from_path で得たものでなければならず、また ::voicevox_voice_model_delete で解放されていてはいけない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_voice_model_id(model: &VoicevoxVoiceModel) -> VoicevoxVoiceModelId {
-    model.id().as_ptr()
+pub unsafe extern "C" fn voicevox_voice_model_id(
+    model: &VoicevoxVoiceModel,
+) -> VoicevoxVoiceModelId {
+    (&*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
+        .id()
+        .as_ptr()
 }
 
 /// ::VoicevoxVoiceModel からメタ情報を取得する。
@@ -290,8 +308,12 @@ pub extern "C" fn voicevox_voice_model_id(model: &VoicevoxVoiceModel) -> Voicevo
 /// - 戻り値の文字列の<b>生存期間</b>(_lifetime_)は次にこの関数が呼ばれるか、`model`が破棄されるまでである。この生存期間を越えて文字列にアクセスしてはならない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_voice_model_get_metas_json(model: &VoicevoxVoiceModel) -> *const c_char {
-    model.metas().as_ptr()
+pub unsafe extern "C" fn voicevox_voice_model_get_metas_json(
+    model: &VoicevoxVoiceModel,
+) -> *const c_char {
+    (&*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
+        .metas()
+        .as_ptr()
 }
 
 /// ::VoicevoxVoiceModel を<b>破棄</b>(_destruct_)する。
@@ -310,8 +332,11 @@ pub extern "C" fn voicevox_voice_model_delete(model: Box<VoicevoxVoiceModel>) {
 /// 音声シンセサイザ。
 ///
 /// <b>構築</b>(_construction_)は ::voicevox_synthesizer_new_with_initialize で行い、<b>破棄</b>(_destruction_)は ::voicevox_synthesizer_delete で行う。
+#[repr(C)]
+pub struct VoicevoxSynthesizer;
+
 #[derive(Getters)]
-pub struct VoicevoxSynthesizer {
+pub struct VoicevoxSynthesizerInternal {
     synthesizer: Synthesizer,
 }
 
@@ -335,13 +360,14 @@ pub unsafe extern "C" fn voicevox_synthesizer_new_with_initialize(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let options = options.into();
+        let internal = open_jtalk as *const OpenJtalkRc as *mut OpenJtalkRcInternal;
 
-        let synthesizer = RUNTIME
-            .block_on(VoicevoxSynthesizer::new_with_initialize(
-                open_jtalk, &options,
-            ))?
-            .into();
-        out_synthesizer.as_ptr().write_unaligned(synthesizer);
+        let synthesizer = RUNTIME.block_on(VoicevoxSynthesizerInternal::new_with_initialize(
+            &*internal, &options,
+        ))?;
+        out_synthesizer.as_ptr().write_unaligned(Box::from_raw(
+            Box::into_raw(Box::from(synthesizer)).cast::<VoicevoxSynthesizer>(),
+        ));
         Ok(())
     })())
 }
@@ -371,11 +397,19 @@ pub extern "C" fn voicevox_synthesizer_delete(synthesizer: Box<VoicevoxSynthesiz
 /// - `model`は ::voicevox_voice_model_new_from_path で得たものでなければならず、また ::voicevox_voice_model_delete で解放されていてはいけない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_synthesizer_load_voice_model(
+pub unsafe extern "C" fn voicevox_synthesizer_load_voice_model(
     synthesizer: &VoicevoxSynthesizer,
     model: &VoicevoxVoiceModel,
 ) -> VoicevoxResultCode {
-    into_result_code_with_error(RUNTIME.block_on(synthesizer.load_voice_model(model.model())))
+    into_result_code_with_error(
+        RUNTIME.block_on(
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+                .load_voice_model(
+                    (&*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
+                        .model(),
+                ),
+        ),
+    )
 }
 
 /// 音声モデルの読み込みを解除する。
@@ -396,7 +430,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_unload_voice_model(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let raw_model_id = ensure_utf8(unsafe { CStr::from_ptr(model_id) })?;
-        synthesizer
+        (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
             .unload_voice_model(&VoiceModelId::new(raw_model_id.to_string()))
             .map_err(Into::into)
     })())
@@ -412,8 +446,12 @@ pub unsafe extern "C" fn voicevox_synthesizer_unload_voice_model(
 /// - `synthesizer`は ::voicevox_synthesizer_new_with_initialize で得たものでなければならず、また ::voicevox_synthesizer_delete で解放されていてはいけない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_synthesizer_is_gpu_mode(synthesizer: &VoicevoxSynthesizer) -> bool {
-    synthesizer.synthesizer().is_gpu_mode()
+pub unsafe extern "C" fn voicevox_synthesizer_is_gpu_mode(
+    synthesizer: &VoicevoxSynthesizer,
+) -> bool {
+    (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+        .synthesizer()
+        .is_gpu_mode()
 }
 
 /// 指定したIDの音声モデルが読み込まれているか判定する。
@@ -433,7 +471,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_is_loaded_voice_model(
     model_id: VoicevoxVoiceModelId,
 ) -> bool {
     let raw_model_id = ensure_utf8(unsafe { CStr::from_ptr(model_id) }).unwrap();
-    synthesizer
+    (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
         .synthesizer()
         .is_loaded_voice_model(&VoiceModelId::new(raw_model_id.into()))
 }
@@ -450,10 +488,11 @@ pub unsafe extern "C" fn voicevox_synthesizer_is_loaded_voice_model(
 /// - `synthesizer`は ::voicevox_synthesizer_new_with_initialize で得たものでなければならず、また ::voicevox_synthesizer_delete で解放されていてはいけない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_synthesizer_create_metas_json(
+pub unsafe extern "C" fn voicevox_synthesizer_create_metas_json(
     synthesizer: &VoicevoxSynthesizer,
 ) -> *mut c_char {
-    let metas = synthesizer.metas();
+    let metas =
+        (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal)).metas();
     C_STRING_DROP_CHECKER.whitelist(metas).into_raw()
 }
 
@@ -556,11 +595,15 @@ pub unsafe extern "C" fn voicevox_synthesizer_create_audio_query(
     into_result_code_with_error((|| {
         let text = CStr::from_ptr(text);
         let japanese_or_kana = ensure_utf8(text)?;
-        let audio_query = RUNTIME.block_on(synthesizer.synthesizer().audio_query(
-            japanese_or_kana,
-            StyleId::new(style_id),
-            &AudioQueryOptions::from(options),
-        ))?;
+        let audio_query = RUNTIME.block_on(
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+                .synthesizer()
+                .audio_query(
+                    japanese_or_kana,
+                    StyleId::new(style_id),
+                    &AudioQueryOptions::from(options),
+                ),
+        )?;
         let audio_query = CString::new(audio_query_model_to_json(&audio_query))
             .expect("should not contain '\\0'");
         output_audio_query_json
@@ -631,11 +674,11 @@ pub unsafe extern "C" fn voicevox_synthesizer_create_accent_phrases(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let text = ensure_utf8(CStr::from_ptr(text))?;
-        let accent_phrases = RUNTIME.block_on(synthesizer.synthesizer().create_accent_phrases(
-            text,
-            StyleId::new(style_id),
-            &options.into(),
-        ))?;
+        let accent_phrases = RUNTIME.block_on(
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+                .synthesizer()
+                .create_accent_phrases(text, StyleId::new(style_id), &options.into()),
+        )?;
         let accent_phrases = CString::new(accent_phrases_to_json(&accent_phrases))
             .expect("should not contain '\\0'");
         output_accent_phrases_json
@@ -673,7 +716,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_replace_mora_data(
             serde_json::from_str(ensure_utf8(CStr::from_ptr(accent_phrases_json))?)
                 .map_err(CApiError::InvalidAccentPhrase)?;
         let accent_phrases = RUNTIME.block_on(
-            synthesizer
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .replace_mora_data(&accent_phrases, StyleId::new(style_id)),
         )?;
@@ -714,7 +757,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_replace_phoneme_length(
             serde_json::from_str(ensure_utf8(CStr::from_ptr(accent_phrases_json))?)
                 .map_err(CApiError::InvalidAccentPhrase)?;
         let accent_phrases = RUNTIME.block_on(
-            synthesizer
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .replace_phoneme_length(&accent_phrases, StyleId::new(style_id)),
         )?;
@@ -755,7 +798,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_replace_mora_pitch(
             serde_json::from_str(ensure_utf8(CStr::from_ptr(accent_phrases_json))?)
                 .map_err(CApiError::InvalidAccentPhrase)?;
         let accent_phrases = RUNTIME.block_on(
-            synthesizer
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .replace_mora_pitch(&accent_phrases, StyleId::new(style_id)),
         )?;
@@ -816,11 +859,15 @@ pub unsafe extern "C" fn voicevox_synthesizer_synthesis(
             .map_err(|_| CApiError::InvalidUtf8Input)?;
         let audio_query: AudioQueryModel =
             serde_json::from_str(audio_query_json).map_err(CApiError::InvalidAudioQuery)?;
-        let wav = RUNTIME.block_on(synthesizer.synthesizer().synthesis(
-            &audio_query,
-            StyleId::new(style_id),
-            &SynthesisOptions::from(options),
-        ))?;
+        let wav = RUNTIME.block_on(
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+                .synthesizer()
+                .synthesis(
+                    &audio_query,
+                    StyleId::new(style_id),
+                    &SynthesisOptions::from(options),
+                ),
+        )?;
         U8_SLICE_OWNER.own_and_lend(wav, output_wav, output_wav_length);
         Ok(())
     })())
@@ -872,11 +919,11 @@ pub unsafe extern "C" fn voicevox_synthesizer_tts(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let text = ensure_utf8(CStr::from_ptr(text))?;
-        let output = RUNTIME.block_on(synthesizer.synthesizer().tts(
-            text,
-            StyleId::new(style_id),
-            &TtsOptions::from(options),
-        ))?;
+        let output = RUNTIME.block_on(
+            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+                .synthesizer()
+                .tts(text, StyleId::new(style_id), &TtsOptions::from(options)),
+        )?;
         U8_SLICE_OWNER.own_and_lend(output, output_wav, output_wav_length);
         Ok(())
     })())
@@ -950,8 +997,11 @@ pub extern "C" fn voicevox_error_result_to_message(
 }
 
 /// ユーザー辞書。
+#[repr(C)]
+pub struct VoicevoxUserDict;
+
 #[derive(Default)]
-pub struct VoicevoxUserDict {
+pub struct VoicevoxUserDictInternal {
     dict: Arc<Mutex<voicevox_core::UserDict>>,
 }
 
@@ -1010,8 +1060,10 @@ pub extern "C" fn voicevox_user_dict_word_make(
 ///
 /// @returns ::VoicevoxUserDict
 #[no_mangle]
-pub extern "C" fn voicevox_user_dict_new() -> Box<VoicevoxUserDict> {
-    Default::default()
+pub unsafe extern "C" fn voicevox_user_dict_new() -> Box<VoicevoxUserDict> {
+    Box::from_raw(
+        Box::into_raw(Box::from(VoicevoxUserDictInternal::default())).cast::<VoicevoxUserDict>(),
+    )
 }
 
 /// ユーザー辞書にファイルを読み込ませる。
@@ -1031,7 +1083,10 @@ pub unsafe extern "C" fn voicevox_user_dict_load(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let dict_path = ensure_utf8(unsafe { CStr::from_ptr(dict_path) })?;
-        let mut dict = user_dict.dict.lock().unwrap();
+        let mut dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+            .dict
+            .lock()
+            .unwrap();
         dict.load(dict_path)?;
 
         Ok(())
@@ -1062,7 +1117,11 @@ pub unsafe extern "C" fn voicevox_user_dict_add_word(
     into_result_code_with_error((|| {
         let word = word.try_into_word()?;
         let uuid = {
-            let mut dict = user_dict.dict.lock().expect("lock failed");
+            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+                as *mut VoicevoxUserDictInternal))
+                .dict
+                .lock()
+                .expect("lock failed");
             dict.add_word(word)?
         };
         output_word_uuid.as_ptr().copy_from(uuid.as_bytes(), 16);
@@ -1093,7 +1152,11 @@ pub unsafe extern "C" fn voicevox_user_dict_update_word(
         let word_uuid = Uuid::from_slice(word_uuid).map_err(CApiError::InvalidUuid)?;
         let word = word.try_into_word()?;
         {
-            let mut dict = user_dict.dict.lock().expect("lock failed");
+            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+                as *mut VoicevoxUserDictInternal))
+                .dict
+                .lock()
+                .expect("lock failed");
             dict.update_word(word_uuid, word)?;
         };
 
@@ -1112,14 +1175,18 @@ pub unsafe extern "C" fn voicevox_user_dict_update_word(
 /// - `word_uuid`は<a href="#voicevox-core-safety">読み込みについて有効</a>でなければならない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_user_dict_remove_word(
+pub unsafe extern "C" fn voicevox_user_dict_remove_word(
     user_dict: &VoicevoxUserDict,
     word_uuid: &[u8; 16],
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let word_uuid = Uuid::from_slice(word_uuid).map_err(CApiError::InvalidUuid)?;
         {
-            let mut dict = user_dict.dict.lock().expect("lock failed");
+            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+                as *mut VoicevoxUserDictInternal))
+                .dict
+                .lock()
+                .expect("lock failed");
             dict.remove_word(word_uuid)?;
         };
 
@@ -1144,7 +1211,10 @@ pub unsafe extern "C" fn voicevox_user_dict_to_json(
     user_dict: &VoicevoxUserDict,
     output_json: NonNull<*mut c_char>,
 ) -> VoicevoxResultCode {
-    let dict = user_dict.dict.lock().expect("lock failed");
+    let dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+        .dict
+        .lock()
+        .expect("lock failed");
     let json = serde_json::to_string(&dict.words()).expect("should be always valid");
     let json = CString::new(json).expect("\\0を含まない文字列であることが保証されている");
     output_json
@@ -1163,14 +1233,22 @@ pub unsafe extern "C" fn voicevox_user_dict_to_json(
 /// - `user_dict`と`other_dict`は ::voicevox_user_dict_new で得たものでなければならず、また ::voicevox_user_dict_delete で解放されていてはいけない。
 /// }
 #[no_mangle]
-pub extern "C" fn voicevox_user_dict_import(
+pub unsafe extern "C" fn voicevox_user_dict_import(
     user_dict: &VoicevoxUserDict,
     other_dict: &VoicevoxUserDict,
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         {
-            let mut dict = user_dict.dict.lock().expect("lock failed");
-            let other_dict = other_dict.dict.lock().expect("lock failed");
+            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+                as *mut VoicevoxUserDictInternal))
+                .dict
+                .lock()
+                .expect("lock failed");
+            let other_dict = (&*(other_dict as *const VoicevoxUserDict
+                as *mut VoicevoxUserDictInternal))
+                .dict
+                .lock()
+                .expect("lock failed");
             dict.import(&other_dict)?;
         };
 
@@ -1195,7 +1273,10 @@ pub unsafe extern "C" fn voicevox_user_dict_save(
     into_result_code_with_error((|| {
         let path = ensure_utf8(CStr::from_ptr(path))?;
         {
-            let dict = user_dict.dict.lock().expect("lock failed");
+            let dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+                .dict
+                .lock()
+                .expect("lock failed");
             dict.save(path)?;
         };
 
