@@ -155,12 +155,12 @@ pub unsafe extern "C" fn voicevox_open_jtalk_rc_use_user_dict(
     into_result_code_with_error((|| {
         let user_dict = user_dict.to_owned();
         {
-            let dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+            let dict = (*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
                 .dict
                 .as_ref()
                 .lock()
                 .expect("lock failed");
-            (&*(open_jtalk as *const OpenJtalkRc as *mut OpenJtalkRcInternal))
+            (*(open_jtalk as *const OpenJtalkRc as *mut OpenJtalkRcInternal))
                 .open_jtalk
                 .use_user_dict(&dict)?;
         }
@@ -292,7 +292,7 @@ pub unsafe extern "C" fn voicevox_voice_model_new_from_path(
 pub unsafe extern "C" fn voicevox_voice_model_id(
     model: &VoicevoxVoiceModel,
 ) -> VoicevoxVoiceModelId {
-    (&*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
+    (*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
         .id()
         .as_ptr()
 }
@@ -311,7 +311,7 @@ pub unsafe extern "C" fn voicevox_voice_model_id(
 pub unsafe extern "C" fn voicevox_voice_model_get_metas_json(
     model: &VoicevoxVoiceModel,
 ) -> *const c_char {
-    (&*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
+    (*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
         .metas()
         .as_ptr()
 }
@@ -403,9 +403,9 @@ pub unsafe extern "C" fn voicevox_synthesizer_load_voice_model(
 ) -> VoicevoxResultCode {
     into_result_code_with_error(
         RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .load_voice_model(
-                    (&*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
+                    (*(model as *const VoicevoxVoiceModel as *mut VoicevoxVoiceModelInternal))
                         .model(),
                 ),
         ),
@@ -430,7 +430,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_unload_voice_model(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let raw_model_id = ensure_utf8(unsafe { CStr::from_ptr(model_id) })?;
-        (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+        (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
             .unload_voice_model(&VoiceModelId::new(raw_model_id.to_string()))
             .map_err(Into::into)
     })())
@@ -449,7 +449,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_unload_voice_model(
 pub unsafe extern "C" fn voicevox_synthesizer_is_gpu_mode(
     synthesizer: &VoicevoxSynthesizer,
 ) -> bool {
-    (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+    (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
         .synthesizer()
         .is_gpu_mode()
 }
@@ -471,7 +471,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_is_loaded_voice_model(
     model_id: VoicevoxVoiceModelId,
 ) -> bool {
     let raw_model_id = ensure_utf8(unsafe { CStr::from_ptr(model_id) }).unwrap();
-    (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+    (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
         .synthesizer()
         .is_loaded_voice_model(&VoiceModelId::new(raw_model_id.into()))
 }
@@ -492,7 +492,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_create_metas_json(
     synthesizer: &VoicevoxSynthesizer,
 ) -> *mut c_char {
     let metas =
-        (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal)).metas();
+        (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal)).metas();
     C_STRING_DROP_CHECKER.whitelist(metas).into_raw()
 }
 
@@ -596,7 +596,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_create_audio_query(
         let text = CStr::from_ptr(text);
         let japanese_or_kana = ensure_utf8(text)?;
         let audio_query = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .audio_query(
                     japanese_or_kana,
@@ -675,7 +675,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_create_accent_phrases(
     into_result_code_with_error((|| {
         let text = ensure_utf8(CStr::from_ptr(text))?;
         let accent_phrases = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .create_accent_phrases(text, StyleId::new(style_id), &options.into()),
         )?;
@@ -716,7 +716,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_replace_mora_data(
             serde_json::from_str(ensure_utf8(CStr::from_ptr(accent_phrases_json))?)
                 .map_err(CApiError::InvalidAccentPhrase)?;
         let accent_phrases = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .replace_mora_data(&accent_phrases, StyleId::new(style_id)),
         )?;
@@ -757,7 +757,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_replace_phoneme_length(
             serde_json::from_str(ensure_utf8(CStr::from_ptr(accent_phrases_json))?)
                 .map_err(CApiError::InvalidAccentPhrase)?;
         let accent_phrases = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .replace_phoneme_length(&accent_phrases, StyleId::new(style_id)),
         )?;
@@ -798,7 +798,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_replace_mora_pitch(
             serde_json::from_str(ensure_utf8(CStr::from_ptr(accent_phrases_json))?)
                 .map_err(CApiError::InvalidAccentPhrase)?;
         let accent_phrases = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .replace_mora_pitch(&accent_phrases, StyleId::new(style_id)),
         )?;
@@ -860,7 +860,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_synthesis(
         let audio_query: AudioQueryModel =
             serde_json::from_str(audio_query_json).map_err(CApiError::InvalidAudioQuery)?;
         let wav = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .synthesis(
                     &audio_query,
@@ -920,7 +920,7 @@ pub unsafe extern "C" fn voicevox_synthesizer_tts(
     into_result_code_with_error((|| {
         let text = ensure_utf8(CStr::from_ptr(text))?;
         let output = RUNTIME.block_on(
-            (&*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
+            (*(synthesizer as *const VoicevoxSynthesizer as *mut VoicevoxSynthesizerInternal))
                 .synthesizer()
                 .tts(text, StyleId::new(style_id), &TtsOptions::from(options)),
         )?;
@@ -1083,7 +1083,7 @@ pub unsafe extern "C" fn voicevox_user_dict_load(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         let dict_path = ensure_utf8(unsafe { CStr::from_ptr(dict_path) })?;
-        let mut dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+        let mut dict = (*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
             .dict
             .lock()
             .unwrap();
@@ -1117,7 +1117,7 @@ pub unsafe extern "C" fn voicevox_user_dict_add_word(
     into_result_code_with_error((|| {
         let word = word.try_into_word()?;
         let uuid = {
-            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+            let mut dict = (*(user_dict as *const VoicevoxUserDict
                 as *mut VoicevoxUserDictInternal))
                 .dict
                 .lock()
@@ -1152,7 +1152,7 @@ pub unsafe extern "C" fn voicevox_user_dict_update_word(
         let word_uuid = Uuid::from_slice(word_uuid).map_err(CApiError::InvalidUuid)?;
         let word = word.try_into_word()?;
         {
-            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+            let mut dict = (*(user_dict as *const VoicevoxUserDict
                 as *mut VoicevoxUserDictInternal))
                 .dict
                 .lock()
@@ -1182,7 +1182,7 @@ pub unsafe extern "C" fn voicevox_user_dict_remove_word(
     into_result_code_with_error((|| {
         let word_uuid = Uuid::from_slice(word_uuid).map_err(CApiError::InvalidUuid)?;
         {
-            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+            let mut dict = (*(user_dict as *const VoicevoxUserDict
                 as *mut VoicevoxUserDictInternal))
                 .dict
                 .lock()
@@ -1211,7 +1211,7 @@ pub unsafe extern "C" fn voicevox_user_dict_to_json(
     user_dict: &VoicevoxUserDict,
     output_json: NonNull<*mut c_char>,
 ) -> VoicevoxResultCode {
-    let dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+    let dict = (*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
         .dict
         .lock()
         .expect("lock failed");
@@ -1239,12 +1239,12 @@ pub unsafe extern "C" fn voicevox_user_dict_import(
 ) -> VoicevoxResultCode {
     into_result_code_with_error((|| {
         {
-            let mut dict = (&*(user_dict as *const VoicevoxUserDict
+            let mut dict = (*(user_dict as *const VoicevoxUserDict
                 as *mut VoicevoxUserDictInternal))
                 .dict
                 .lock()
                 .expect("lock failed");
-            let other_dict = (&*(other_dict as *const VoicevoxUserDict
+            let other_dict = (*(other_dict as *const VoicevoxUserDict
                 as *mut VoicevoxUserDictInternal))
                 .dict
                 .lock()
@@ -1273,7 +1273,7 @@ pub unsafe extern "C" fn voicevox_user_dict_save(
     into_result_code_with_error((|| {
         let path = ensure_utf8(CStr::from_ptr(path))?;
         {
-            let dict = (&*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
+            let dict = (*(user_dict as *const VoicevoxUserDict as *mut VoicevoxUserDictInternal))
                 .dict
                 .lock()
                 .expect("lock failed");
