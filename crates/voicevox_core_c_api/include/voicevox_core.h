@@ -237,27 +237,16 @@ typedef int32_t VoicevoxUserDictWordType;
  * ```
  * }
  */
-typedef struct OpenJtalkRc OpenJtalkRc;
+typedef struct OpenJtalkRc {
 
-/**
- * 音声シンセサイザ。
- *
- * <b>構築</b>(_construction_)は ::voicevox_synthesizer_new_with_initialize で行い、<b>破棄</b>(_destruction_)は ::voicevox_synthesizer_delete で行う。
- */
-typedef struct VoicevoxSynthesizer VoicevoxSynthesizer;
+} OpenJtalkRc;
 
 /**
  * ユーザー辞書。
  */
-typedef struct VoicevoxUserDict VoicevoxUserDict;
+typedef struct VoicevoxUserDict {
 
-/**
- * 音声モデル。
- *
- * VVMファイルと対応する。
- * <b>構築</b>(_construction_)は ::voicevox_voice_model_new_from_path で行い、<b>破棄</b>(_destruction_)は ::voicevox_voice_model_delete で行う。
- */
-typedef struct VoicevoxVoiceModel VoicevoxVoiceModel;
+} VoicevoxUserDict;
 
 /**
  * ::voicevox_synthesizer_new_with_initialize のオプション。
@@ -279,9 +268,28 @@ typedef struct VoicevoxInitializeOptions {
 } VoicevoxInitializeOptions;
 
 /**
+ * 音声モデル。
+ *
+ * VVMファイルと対応する。
+ * <b>構築</b>(_construction_)は ::voicevox_voice_model_new_from_path で行い、<b>破棄</b>(_destruction_)は ::voicevox_voice_model_delete で行う。
+ */
+typedef struct VoicevoxVoiceModel {
+
+} VoicevoxVoiceModel;
+
+/**
  * 音声モデルID。
  */
 typedef const char *VoicevoxVoiceModelId;
+
+/**
+ * 音声シンセサイザ。
+ *
+ * <b>構築</b>(_construction_)は ::voicevox_synthesizer_new_with_initialize で行い、<b>破棄</b>(_destruction_)は ::voicevox_synthesizer_delete で行う。
+ */
+typedef struct VoicevoxSynthesizer {
+
+} VoicevoxSynthesizer;
 
 /**
  * ::voicevox_synthesizer_create_audio_query のオプション。
