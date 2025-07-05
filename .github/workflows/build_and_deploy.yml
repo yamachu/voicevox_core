@@ -208,7 +208,7 @@ jobs:
             plain-cdylib) linking=load-onnxruntime ;;
             ios-xcframework) linking=link-onnxruntime ;;
           esac
-          cargo build -p voicevox_core_c_api -v --features "$linking" --target ${{ matrix.target }} --release
+          cargo build -p voicevox_core_c_api -v --features "$linking" --target ${{ matrix.target }}
         env:
           RUSTFLAGS: -C panic=abort
       - name: build voicevox_core_python_api
