@@ -4025,7 +4025,7 @@ dependencies = [
 name = "voicevox_core_wasm"
 version = "0.0.0"
 dependencies = [
- "voicevox_core_c_api",
+ "voicevox_core",
 ]
 
 [[package]]
