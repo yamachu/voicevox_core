@@ -12,6 +12,7 @@ use crate::core::{
     },
     voice_model::ModelBytes,
 };
+use crate::error::ErrorRepr;
 
 pub(crate) struct RunContext;
 
@@ -46,7 +47,10 @@ impl InferenceRuntime for Onnxruntime {
     const DISPLAY_NAME: &'static str = "WASM link-smoke runtime";
 
     fn supported_devices(&self) -> crate::Result<SupportedDevices> {
-        Err(anyhow!("WASM link-smoke runtime does not support inference").into())
+        Err(ErrorRepr::GetSupportedDevices(anyhow!(
+            "WASM link-smoke runtime does not support inference"
+        ))
+        .into())
     }
 
     fn test_gpu(&self, _: GpuSpec) -> anyhow::Result<()> {
