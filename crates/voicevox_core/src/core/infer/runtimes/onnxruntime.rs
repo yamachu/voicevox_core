@@ -972,6 +972,34 @@ pub(crate) mod nonblocking {
 mod tests {
     use rstest::rstest;
 
+    #[cfg(all(target_os = "emscripten", feature = "link-onnxruntime"))]
+    #[test]
+    fn loads_onnx_model_and_reads_io_metadata() {
+        use crate::core::{
+            devices::DeviceSpec,
+            infer::{InferenceRuntime, InferenceSessionOptions},
+            voice_model::ModelBytes,
+        };
+
+        let model_path = std::env::var_os("VOICEVOX_SAMPLE_ONNX")
+            .expect("VOICEVOX_SAMPLE_ONNX must point to a sample ONNX model");
+        let model = ModelBytes::Onnx(
+            std::fs::read(model_path).expect("failed to read the sample ONNX model"),
+        );
+        let runtime = super::blocking::Onnxruntime::init_once()
+            .expect("failed to initialize the linked ONNX Runtime");
+        let (_, inputs, outputs) =
+            <super::blocking::Onnxruntime as InferenceRuntime>::new_session(
+                runtime,
+                &model,
+                InferenceSessionOptions::new(1, DeviceSpec::Cpu),
+            )
+            .expect("failed to create a session from the sample ONNX model");
+
+        assert!(!inputs.is_empty());
+        assert!(!outputs.is_empty());
+    }
+
     #[cfg(feature = "load-onnxruntime")]
     #[test]
     fn assert_same_lib_names_and_versions() {
