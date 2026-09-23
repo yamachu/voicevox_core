@@ -1,13 +1,20 @@
-const successMarker = "BROWSER_ONNX_SMOKE_OK";
+const successMarker = "BROWSER_C_API_OK";
 
 globalThis.Module = {
-  arguments: ["/sample.onnx"],
+  noInitialRun: true,
   locateFile: (path, prefix) => new URL(path, prefix || self.location.href).href,
-  print: (...values) => {
-    const text = values.join(" ");
-    self.postMessage({ type: "log", text });
-    if (text.includes(successMarker)) {
-      self.postMessage({ type: "success", text });
+  onRuntimeInitialized: () => {
+    try {
+      const resultCode = Module._voicevox_browser_initialize_runtime();
+      if (resultCode !== 0) {
+        throw new Error(`ONNX Runtime initialization returned ${resultCode}`);
+      }
+      self.postMessage({
+        type: "success",
+        text: `${successMarker}: Core C API initialized ONNX Runtime`,
+      });
+    } catch (error) {
+      self.postMessage({ type: "error", message: error.message });
     }
   },
   printErr: (...values) =>
@@ -16,4 +23,4 @@ globalThis.Module = {
     self.postMessage({ type: "error", message: `Emscripten aborted: ${reason}` }),
 };
 
-importScripts("./wasm_onnx_smoke.js");
+importScripts("./wasm_c_api_binding_smoke.js");
