@@ -15,9 +15,9 @@ name = "talk"
 required-features = ["load-onnxruntime"] # TODO: 将来的には`link-onnxruntime`でも動くようにする
 
 [[bin]]
-name = "wasm_onnx_load"
-path = "src/wasm_onnx_load.rs"
-required-features = ["wasm-onnx-load-smoke"]
+name = "wasm_synthesis_smoke"
+path = "src/wasm_synthesis_smoke.rs"
+required-features = ["wasm-synthesis-smoke"]
 
 [[bench]]
 name = "simulation"
@@ -39,7 +39,7 @@ link-onnxruntime = ["voicevox_core_build_features/link"]
 wasm-link-smoke = ["wasm-open-jtalk-link-smoke", "wasm-inference-link-smoke"]
 wasm-open-jtalk-link-smoke = []
 wasm-inference-link-smoke = []
-wasm-onnx-load-smoke = []
+wasm-synthesis-smoke = ["wasm-open-jtalk-link-smoke"]
 
 [dependencies]
 anyhow.workspace = true

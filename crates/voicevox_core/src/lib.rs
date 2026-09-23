@@ -498,27 +498,3 @@ pub use self::{
     synthesizer::{AccelerationMode, AudioFeature},
     version::VERSION,
 };
-
-#[cfg(feature = "wasm-onnx-load-smoke")]
-#[doc(hidden)]
-pub mod wasm_onnx_load_smoke {
-    use crate::core::{
-        devices::DeviceSpec,
-        infer::{InferenceRuntime, InferenceSessionOptions},
-        voice_model::ModelBytes,
-    };
-
-    pub fn load_model(model_bytes: Vec<u8>) -> anyhow::Result<(usize, usize)> {
-        let runtime =
-            crate::core::infer::runtimes::onnxruntime::blocking::Onnxruntime::init_once()?;
-        let model = ModelBytes::Onnx(model_bytes);
-        let (_, inputs, outputs) =
-            <crate::core::infer::runtimes::onnxruntime::blocking::Onnxruntime as InferenceRuntime>::new_session(
-                runtime,
-                &model,
-                InferenceSessionOptions::new(1, DeviceSpec::Cpu),
-            )?;
-
-        Ok((inputs.len(), outputs.len()))
-    }
-}

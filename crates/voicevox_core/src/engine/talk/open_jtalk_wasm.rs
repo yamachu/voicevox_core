@@ -30,7 +30,20 @@ pub(crate) mod blocking {
     }
 
     impl FullcontextExtractor for OpenJtalk {
-        fn extract_fullcontext(&self, _: &str) -> anyhow::Result<Vec<String>> {
+        fn extract_fullcontext(&self, _text: &str) -> anyhow::Result<Vec<String>> {
+            #[cfg(feature = "wasm-synthesis-smoke")]
+            if _text == "いぇ" {
+                return Ok([
+                    "xx^xx-sil+y=e/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:xx_xx#xx_xx@xx_xx|xx_xx/G:1_1%0_xx_xx/H:xx_xx/I:xx-xx@xx+xx&xx-xx|xx+xx/J:1_1/K:1+1-1",
+                    "xx^sil-y+e=sil/A:0+1+1/B:xx-xx_xx/C:09_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:1_1#0_xx@1_1|1_1/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-1@1+1&1-1|1+1/J:xx_xx/K:1+1-1",
+                    "sil^y-e+sil=xx/A:0+1+1/B:xx-xx_xx/C:09_xx+xx/D:xx+xx_xx/E:xx_xx!xx_xx-xx/F:1_1#0_xx@1_1|1_1/G:xx_xx%xx_xx_xx/H:xx_xx/I:1-1@1+1&1-1|1+1/J:xx_xx/K:1+1-1",
+                    "y^e-sil+xx=xx/A:xx+xx+xx/B:xx-xx_xx/C:xx_xx+xx/D:xx+xx_xx/E:1_1!0_xx-xx/F:xx_xx#xx_xx@xx_xx|xx_xx/G:xx_xx%xx_xx_xx/H:1_1/I:xx-xx@xx+xx&xx-xx|xx+xx/J:xx_xx/K:1+1-1",
+                ]
+                .into_iter()
+                .map(str::to_owned)
+                .collect());
+            }
+
             anyhow::bail!("text analysis is unavailable in the link-test substitute")
         }
     }
