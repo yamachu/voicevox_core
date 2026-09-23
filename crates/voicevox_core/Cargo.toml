@@ -30,6 +30,7 @@ default = []
 buildtime-download-onnxruntime = ["voicevox_core_build_features/download"]
 load-onnxruntime = ["ort/load-dynamic", "dep:libloading"]
 link-onnxruntime = ["voicevox_core_build_features/link"]
+generate-open-jtalk-bindings = ["open_jtalk/generate-bindings"]
 
 [dependencies]
 anyhow.workspace = true
