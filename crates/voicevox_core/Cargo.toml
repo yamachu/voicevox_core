@@ -30,7 +30,8 @@ default = []
 buildtime-download-onnxruntime = ["voicevox_core_build_features/download"]
 load-onnxruntime = ["ort/load-dynamic", "dep:libloading"]
 link-onnxruntime = ["voicevox_core_build_features/link"]
-generate-open-jtalk-bindings = ["open_jtalk/generate-bindings"]
+# Enables a nonfunctional analyzer substitute solely for final-link verification.
+wasm-link-smoke = []
 
 [dependencies]
 anyhow.workspace = true
@@ -62,7 +63,6 @@ ndarray.workspace = true
 num-bigint.workspace = true
 num-traits.workspace = true
 once_cell.workspace = true
-open_jtalk.workspace = true
 ort = { workspace = true, features = ["std", "ndarray", "tracing", "api-17", "alternative-backend"], default-features = false }
 ouroboros.workspace = true
 pastey.workspace = true
@@ -101,6 +101,9 @@ voicevox_core_build_features.workspace = true
 [target."cfg(windows)".dependencies]
 humansize.workspace = true
 windows = { workspace = true, features = ["Win32_Foundation", "Win32_Graphics_Dxgi"] }
+
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+open_jtalk.workspace = true
 
 [lints.rust]
 unsafe_code = "allow" # 色々必要なため
