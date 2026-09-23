@@ -14,7 +14,9 @@ fn main() -> anyhow::Result<()> {
         .build()?;
     let voice_model = VoiceModelFile::open(model_path)?;
     synthesizer.load_voice_model(&voice_model).perform()?;
-    let wav = synthesizer.tts("いぇ", StyleId::new(302)).perform()?;
+    let wav = synthesizer
+        .tts("これはテストです", StyleId::new(302))
+        .perform()?;
     anyhow::ensure!(
         wav.starts_with(b"RIFF") && wav.get(8..12) == Some(b"WAVE"),
         "synthesis did not produce WAV audio"
