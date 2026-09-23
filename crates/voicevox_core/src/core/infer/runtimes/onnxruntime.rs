@@ -11,19 +11,25 @@
 // }
 // ```
 
+use std::{ffi::CStr, fmt::Display, mem};
+
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 use std::{
-    ffi::CStr,
-    fmt::{Debug, Display},
-    mem,
+    fmt::Debug,
     sync::{Arc, LazyLock},
     vec,
 };
 
-use anyhow::{Context as _, anyhow, bail, ensure};
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
+use anyhow::anyhow;
+use anyhow::{Context as _, bail, ensure};
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 use duplicate::duplicate_item;
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 use ndarray::{Array, Dimension};
+use ort::environment::Environment;
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 use ort::{
-    environment::Environment,
     ep::{
         CPUExecutionProvider, CUDAExecutionProvider, DirectMLExecutionProvider,
         ExecutionProvider as _, cuda::ConvAlgorithmSearch,
@@ -234,8 +240,9 @@ impl TargetLibOnnxruntimeInfo<'_> {
     }
 }
 
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 impl InferenceRuntime for self::blocking::Onnxruntime {
-    type Session = async_lock::Mutex<ort::session::Session>; // WASMでは`ort`を利用しないので、ここはasync-lockを用いてよいはず
+    type Session = async_lock::Mutex<ort::session::Session>;
     type RunContext = OnnxruntimeRunContext;
 
     const DISPLAY_NAME: &'static str = if cfg!(feature = "load-onnxruntime") {
@@ -476,11 +483,13 @@ impl InferenceRuntime for self::blocking::Onnxruntime {
     }
 }
 
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 pub(crate) struct OnnxruntimeRunContext {
     sess: Arc<async_lock::Mutex<ort::session::Session>>,
     inputs: Vec<(&'static str, ort::session::SessionInputValue<'static>)>,
 }
 
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 impl OnnxruntimeRunContext {
     fn push_input(
         &mut self,
@@ -496,6 +505,7 @@ impl OnnxruntimeRunContext {
     }
 }
 
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 impl From<Arc<async_lock::Mutex<ort::session::Session>>> for OnnxruntimeRunContext {
     fn from(sess: Arc<async_lock::Mutex<ort::session::Session>>) -> Self {
         Self {
@@ -505,6 +515,7 @@ impl From<Arc<async_lock::Mutex<ort::session::Session>>> for OnnxruntimeRunConte
     }
 }
 
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 impl PushInputTensor for OnnxruntimeRunContext {
     #[duplicate_item(
         method           T;
@@ -521,6 +532,7 @@ impl PushInputTensor for OnnxruntimeRunContext {
 }
 
 // FIXME: use ouroboros to reduce copies
+#[cfg(not(all(target_os = "emscripten", feature = "wasm-link-smoke")))]
 fn extract_outputs(
     outputs: &ort::session::SessionOutputs<'_>,
 ) -> anyhow::Result<Vec<OutputTensor>> {
@@ -549,6 +561,10 @@ fn extract_outputs(
         })
         .collect()
 }
+
+#[cfg(all(target_os = "emscripten", feature = "wasm-link-smoke"))]
+#[path = "onnxruntime_wasm_link_smoke.rs"]
+mod wasm_link_smoke;
 
 pub(crate) mod blocking {
     use ref_cast::{RefCastCustom, ref_cast_custom};
@@ -933,7 +949,7 @@ pub(crate) mod nonblocking {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(all(target_os = "emscripten", feature = "wasm-link-smoke"))))]
 mod tests {
     use rstest::rstest;
 
