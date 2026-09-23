@@ -122,7 +122,7 @@ zip = "0.6.3"
 
 [workspace.dependencies.open_jtalk]
 git = "https://github.com/yamachu/open_jtalk-rs.git"
-rev = "590869b8067fe26e970b9a2928fefb26af72db4e"
+rev = "b4eb5ffaa3dd198bdcd3d3b6c46e5fcd2b237f4d"
 
 # FIXME: iOS対応のpull request(https://github.com/wesleywiser/process_path/pull/16)がマージされる見込みが無いため
 [workspace.dependencies.process_path]

@@ -317,7 +317,7 @@ dependencies = [
  "bitflags 2.10.0",
  "cexpr",
  "clang-sys",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "log",
  "prettyplease",
  "proc-macro2",
@@ -337,7 +337,7 @@ dependencies = [
  "bitflags 2.10.0",
  "cexpr",
  "clang-sys",
- "itertools 0.10.5",
+ "itertools 0.12.1",
  "log",
  "prettyplease",
  "proc-macro2",
@@ -2758,7 +2758,7 @@ dependencies = [
 [[package]]
 name = "open_jtalk"
 version = "0.1.25"
-source = "git+https://github.com/yamachu/open_jtalk-rs.git?rev=590869b8067fe26e970b9a2928fefb26af72db4e#590869b8067fe26e970b9a2928fefb26af72db4e"
+source = "git+https://github.com/yamachu/open_jtalk-rs.git?rev=b4eb5ffaa3dd198bdcd3d3b6c46e5fcd2b237f4d#b4eb5ffaa3dd198bdcd3d3b6c46e5fcd2b237f4d"
 dependencies = [
  "camino",
  "open_jtalk-sys",
@@ -2768,7 +2768,7 @@ dependencies = [
 [[package]]
 name = "open_jtalk-sys"
 version = "0.16.111"
-source = "git+https://github.com/yamachu/open_jtalk-rs.git?rev=590869b8067fe26e970b9a2928fefb26af72db4e#590869b8067fe26e970b9a2928fefb26af72db4e"
+source = "git+https://github.com/yamachu/open_jtalk-rs.git?rev=b4eb5ffaa3dd198bdcd3d3b6c46e5fcd2b237f4d#b4eb5ffaa3dd198bdcd3d3b6c46e5fcd2b237f4d"
 dependencies = [
  "bindgen 0.70.1",
  "cmake",
