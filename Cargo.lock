@@ -3184,7 +3184,7 @@ dependencies = [
 [[package]]
 name = "process_path"
 version = "0.1.4"
-source = "git+https://github.com/VOICEVOX/process_path.git?rev=de226a26e8e18edbdb1d6f986afe37bbbf35fbf4#de226a26e8e18edbdb1d6f986afe37bbbf35fbf4"
+source = "git+https://github.com/yamachu/process_path.git?rev=48aa44d2b2bc43c10ddeaa0a10cbf594cefb3848#48aa44d2b2bc43c10ddeaa0a10cbf594cefb3848"
 dependencies = [
  "libc",
  "winapi",
