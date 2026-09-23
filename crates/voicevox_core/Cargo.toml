@@ -19,6 +19,11 @@ name = "wasm_synthesis_smoke"
 path = "src/wasm_synthesis_smoke.rs"
 required-features = ["wasm-synthesis-smoke"]
 
+[[bin]]
+name = "wasm_onnx_smoke"
+path = "src/wasm_onnx_smoke.rs"
+required-features = ["link-onnxruntime"]
+
 [[bench]]
 name = "simulation"
 harness = false
