@@ -11,4 +11,5 @@ name = "wasm_browser_api_smoke"
 path = "src/main.rs"
 
 [dependencies]
-voicevox_core = { workspace = true, features = ["link-onnxruntime", "wasm-open-jtalk-link-smoke"] }
+anyhow.workspace = true
+voicevox_core = { workspace = true, features = ["link-onnxruntime", "wasm-synthesis-smoke"] }
