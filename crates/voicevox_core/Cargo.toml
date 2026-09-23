@@ -30,8 +30,10 @@ default = []
 buildtime-download-onnxruntime = ["voicevox_core_build_features/download"]
 load-onnxruntime = ["ort/load-dynamic", "dep:libloading"]
 link-onnxruntime = ["voicevox_core_build_features/link"]
-# Enables nonfunctional analyzer and inference substitutes solely for final-link verification.
-wasm-link-smoke = []
+# Enables both nonfunctional substitutes used by the original link-only check.
+wasm-link-smoke = ["wasm-open-jtalk-link-smoke", "wasm-inference-link-smoke"]
+wasm-open-jtalk-link-smoke = []
+wasm-inference-link-smoke = []
 
 [dependencies]
 anyhow.workspace = true
