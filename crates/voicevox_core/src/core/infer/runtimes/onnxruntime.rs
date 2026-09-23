@@ -469,6 +469,17 @@ impl InferenceRuntime for self::blocking::Onnxruntime {
         OnnxruntimeRunContext { sess, inputs }: Self::RunContext,
         cancellable: bool,
     ) -> anyhow::Result<Vec<OutputTensor>> {
+        #[cfg(target_os = "emscripten")]
+        {
+            let mut sess = sess.lock().await;
+            if cancellable {
+                extract_outputs(&sess.run_with_options(inputs, &RunOptions::new()?)?)
+            } else {
+                extract_outputs(&sess.run(inputs)?)
+            }
+        }
+
+        #[cfg(not(target_os = "emscripten"))]
         if cancellable {
             extract_outputs(
                 &sess
