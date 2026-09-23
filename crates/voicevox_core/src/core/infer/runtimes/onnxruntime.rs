@@ -463,12 +463,12 @@ impl InferenceRuntime for self::blocking::Onnxruntime {
         OnnxruntimeRunContext { sess, inputs }: Self::RunContext,
     ) -> anyhow::Result<Vec<OutputTensor>> {
         #[cfg(target_os = "emscripten")]
-        let sess = sess
+        let mut sess = sess
             .try_lock()
             .ok_or_else(|| anyhow!("the ONNX Runtime session is already locked"))?;
 
         #[cfg(not(target_os = "emscripten"))]
-        let sess = sess.lock_blocking();
+        let mut sess = sess.lock_blocking();
 
         extract_outputs(&sess.run(inputs)?)
     }
