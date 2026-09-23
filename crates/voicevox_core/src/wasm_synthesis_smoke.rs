@@ -11,6 +11,7 @@ fn main() -> anyhow::Result<()> {
     let synthesizer = Synthesizer::builder(runtime)
         .text_analyzer(OpenJtalk::new("")?)
         .acceleration_mode(AccelerationMode::Cpu)
+        .cpu_num_threads(1)
         .build()?;
     let voice_model = VoiceModelFile::open(model_path)?;
     synthesizer.load_voice_model(&voice_model).perform()?;
