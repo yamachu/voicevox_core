@@ -1,4 +1,4 @@
-const successMarker = "BROWSER_C_API_OK";
+const successMarker = "BROWSER_CORE_ABI_OK";
 
 globalThis.Module = {
   noInitialRun: true,
@@ -11,7 +11,7 @@ globalThis.Module = {
       }
       self.postMessage({
         type: "success",
-        text: `${successMarker}: Core C API initialized ONNX Runtime`,
+        text: `${successMarker}: Core initialized ONNX Runtime from JavaScript`,
       });
     } catch (error) {
       self.postMessage({ type: "error", message: error.message });
@@ -23,4 +23,4 @@ globalThis.Module = {
     self.postMessage({ type: "error", message: `Emscripten aborted: ${reason}` }),
 };
 
-importScripts("./wasm_c_api_binding_smoke.js");
+importScripts("./wasm_browser_api_smoke.js");
