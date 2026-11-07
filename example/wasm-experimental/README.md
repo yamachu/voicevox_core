@@ -14,7 +14,19 @@ Open JTalk は既存 PoC と同じ wasm 対応 fork を引き続き使います�
 
 Rust 1.96.0、Emscripten 4.0.8、ONNX Runtime 1.23.2 の静的ライブラリで、
 以下の wasm ビルド（最終リンクを含む）とネイティブ側のコンパイルを確認しました。
-ブラウザ上での音声合成の動作確認は別途必要です。
+同じ成果物をローカル HTTP サーバーからブラウザで開き、Web Worker 上の辞書・モデル読み込み、
+Core 初期化、以下の順での連続合成と WAV のメインスレッドへの転送も確認しました。
+モデルはこのブランチの `model/sample.vvm` を zip にしたものです。
+
+| テキスト | Style ID | WAV サイズ | 音声長 | RMS |
+| --- | --- | --- | --- | --- |
+| これはテストです | 302 | 68,652 bytes | 1.429333 秒 | 0.017273 |
+| こんにちは。公式のオルトを使った音声合成の動作確認です。 | 303 | 265,260 bytes | 5.525333 秒 | 0.010746 |
+
+両 WAV の RIFF サイズと実データサイズの一致、Web Audio API によるデコード成功、
+非無音のサンプルを確認しました。2 件目は `<audio>` の `ended=true`、
+`currentTime=duration`、`error=null` で再生終了まで確認しています。
+音声を耳で聴いて品質を評価するテストではありません。
 
 ```sh
 cargo +1.96.0 check --locked --package voicevox_core --features load-onnxruntime
